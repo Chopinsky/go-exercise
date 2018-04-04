@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 )
 
@@ -48,4 +49,41 @@ func (b *binder) Bind(userID string, event string, conn *Connection) error {
 
 	b.connIDToUserIDMap[conn.GetID()] = userID
 	return nil
+}
+
+func (b *binder) Unbind(conn *Connection) error {
+	if conn == nil {
+		return errors.New("Connection can't be null")
+	}
+
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	connID := conn.GetID()
+	userID, ok := b.connIDToUserIDMap[connID]
+
+	if !ok {
+		return fmt.Errorf("can't find userID by connID: %s", connID)
+	}
+
+	if eventConns, ok := b.userIDToConnMap[userID]; ok {
+		for i := range *eventConns {
+			if (*eventConns)[i].Connection == conn {
+				newEventConns := append((*eventConns)[:i], (*eventConns)[i+1:]...)
+				delete(b.connIDToUserIDMap, connID)
+
+				if len(newEventConns) > 0 {
+					b.userIDToConnMap[userID] = &newEventConns
+				} else {
+					delete(b.userIDToConnMap, userID)
+				}
+
+				return nil
+			}
+		}
+
+		return fmt.Errorf("Unable to locate the connection with ID: %s", connID)
+	}
+
+	return fmt.Errorf("Unable to find the event connection with user id: %s", userID)
 }
