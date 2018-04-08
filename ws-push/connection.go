@@ -31,6 +31,11 @@ func (c *Connection) GetID() string {
 	return c.id
 }
 
+// IsMatch finds out if the current connection matches the connID
+func (c *Connection) IsMatch(connID string) bool {
+	return (c.GetID() == connID)
+}
+
 func (c *Connection) Write(frame []byte) (n int, err error) {
 	select {
 	case <-c.closeChannel:

@@ -16,3 +16,9 @@ type pushHandler struct {
 	authFunc func(r *http.Request) bool
 	binder   *binder
 }
+
+// RegisterMessage ...
+type RegisterMessage struct {
+	Token string
+	Event string
+}

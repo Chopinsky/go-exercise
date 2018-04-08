@@ -87,3 +87,64 @@ func (b *binder) Unbind(conn *Connection) error {
 
 	return fmt.Errorf("Unable to find the event connection with user id: %s", userID)
 }
+
+func (b *binder) FindConnection(connID string) (*Connection, bool) {
+	if connID == "" {
+		return nil, false
+	}
+
+	userID, ok := b.connIDToUserIDMap[connID]
+
+	if ok {
+		if evtConnections, ok := b.userIDToConnMap[userID]; ok {
+			conn := find(evtConnections, connID)
+			if conn != nil {
+				return conn, true
+			}
+		}
+
+		return nil, false
+	}
+
+	for _, evtConnections := range b.userIDToConnMap {
+		conn := find(evtConnections, connID)
+		if conn != nil {
+			return conn, true
+		}
+	}
+
+	return nil, false
+}
+
+func (b *binder) FilterConnections(userID, event string) ([]*Connection, error) {
+	if userID == "" {
+		return nil, errors.New("User ID can't be empty")
+	}
+
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	if evtConnections, ok := b.userIDToConnMap[userID]; ok {
+		matches := make([]*Connection, 0, len(*evtConnections))
+
+		for i := range *evtConnections {
+			if event == "" || (*evtConnections)[i].Event == event {
+				matches = append(matches, (*evtConnections)[i].Connection)
+			}
+		}
+
+		return matches, nil
+	}
+
+	return []*Connection{}, nil
+}
+
+func find(connArr *[]eventConnection, connID string) *Connection {
+	for i := range *connArr {
+		if (*connArr)[i].Connection.IsMatch(connID) {
+			return (*connArr)[i].Connection
+		}
+	}
+
+	return nil
+}
