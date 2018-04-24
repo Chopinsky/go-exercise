@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -33,7 +35,7 @@ type RegisterMessage struct {
 // PushMessage ...
 type PushMessage struct {
 	UserID  string `json:"userId"`
-	Even    string
+	Event   string
 	Message string
 }
 
@@ -98,4 +100,68 @@ func (handler *websocketHandler) closeConnections(userID, event string) (int, er
 	}
 
 	return cnt, nil
+}
+
+// ServeHttp ...
+func (s *pushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	if s.authFunc != nil {
+		if ok := s.authFunc(r); !ok {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+	}
+
+	var pm PushMessage
+	decoder := json.NewDecoder(r.Body)
+
+	if err := decoder.Decode(&pm); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(ErrIllegalRequest.Error()))
+		return
+	}
+
+	if pm.UserID == "" || pm.Event == "" || pm.Message == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(ErrIllegalRequest.Error()))
+		return
+	}
+
+	cnt, err := s.push(pm.UserID, pm.Event, pm.Message)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	result := strings.NewReader(fmt.Sprintf("Message sent to: %d clients", cnt))
+	io.Copy(w, result)
+}
+
+func (s *pushHandler) push(userID, event, message string) (int, error) {
+	if userID == "" || event == "" || message == "" {
+		return 0, errors.New("Input parameters can't be null")
+	}
+
+	connections, err := s.binder.FilterConnections(userID, event)
+	if err != nil {
+		return 0, fmt.Errorf("Failed to filter connections: %v", err)
+	}
+
+	count := 0
+	for i := range connections {
+		_, err := connections[i].Write([]byte(message))
+		if err != nil {
+			s.binder.Unbind(connections[i])
+			continue
+		}
+
+		count++
+	}
+
+	return count, nil
 }
