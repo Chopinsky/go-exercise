@@ -1,5 +1,6 @@
 package main
 
 func main() {
-	Start()
+	server := CreateServer("127.0.0.1")
+	server.ListenAndServe()
 }
