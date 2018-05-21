@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -78,6 +80,32 @@ func (s *Server) ListenAndServe() error {
 	http.Handle(s.PushPath, s.ph)
 
 	return http.ListenAndServe(s.Addr, nil)
+}
+
+// Push ...
+func (s *Server) Push(userID, event, message string) (int, error) {
+	return s.ph.push(userID, event, message)
+}
+
+// Drop ...
+func (s *Server) Drop(userID, event string) (int, error) {
+	return s.wsHandler.closeConnections(userID, event)
+}
+
+func (s *Server) check() error {
+	if !checkPath(s.WSPath) {
+		return fmt.Errorf("Web-Socket Path: %s is illegal", s.WSPath)
+	}
+
+	if !checkPath(s.PushPath) {
+		return fmt.Errorf("Push Path: %s is illegal", s.PushPath)
+	}
+
+	if s.WSPath == s.PushPath {
+		return errors.New("Web-Socket path should not be identical to the push path")
+	}
+
+	return nil
 }
 
 func checkPath(path string) bool {
