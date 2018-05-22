@@ -1,16 +1,10 @@
-package naivechain
+package main
 
-// "github.com/davecgh/go-spew/spew"
-// "github.com/gorilla/mux"
-// "github.com/joho/godotenv"
+func main() {
+	init, err := NewBlock(nil, 1)
+	if err != nil {
+		println("Error: ", err)
+	}
 
-// Block ...
-type Block struct {
-	Index     int
-	Timestamp string
-	BPM       int
-	Hash      string
-	PrevHash  string
+	println("Hash: ", init.Hash)
 }
-
-var Blockchain []Block
