@@ -1,14 +1,9 @@
 package main
 
 func main() {
-	run()
-}
-
-func run() {
-	init, err := NewBlock(nil, 1)
-	if err != nil {
-		println("Error: ", err)
+	if err := run(); err != nil {
+		println("Unable to start the server: ", err)
 	}
 
-	println("Hash: ", init.Hash)
+	println("Done...")
 }
