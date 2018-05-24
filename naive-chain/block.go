@@ -19,9 +19,21 @@ type Block struct {
 	PrevHash  string
 }
 
-// ValidatBlock ...
-func (b *Block) ValidatBlock(childBlock *Block) bool {
+// ValidatChildBlock ...
+func (b *Block) ValidatChildBlock(childBlock *Block) bool {
 	if childBlock == nil {
+		return false
+	}
+
+	if b.Index+1 != childBlock.Index {
+		return false
+	}
+
+	if b.Hash != childBlock.PrevHash {
+		return false
+	}
+
+	if childBlock.Hash != childBlock.CalcHash() {
 		return false
 	}
 
