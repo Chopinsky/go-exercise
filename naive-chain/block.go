@@ -19,6 +19,11 @@ type Block struct {
 	PrevHash  string
 }
 
+// Message ...
+type Message struct {
+	BPM int
+}
+
 // ValidatChildBlock ...
 func (b *Block) ValidatChildBlock(childBlock *Block) bool {
 	if childBlock == nil {
