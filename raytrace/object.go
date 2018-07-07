@@ -1,6 +1,9 @@
 package raytrace
 
-import "math"
+import (
+	"image/color"
+	"math"
+)
 
 // Point ...
 type Point struct {
@@ -16,18 +19,11 @@ type Vector struct {
 	z float32
 }
 
-// Color ...
-type Color struct {
-	red   float32
-	green float32
-	blue  float32
-}
-
 // Sphere ...
 type Sphere struct {
 	center Point
 	radius float64
-	color  Color
+	color  color.Color
 }
 
 // Intersectable ...
@@ -35,9 +31,20 @@ type Intersectable interface {
 	Intersect(ray *Ray) bool
 }
 
+// Dot ...
+func (v1 *Vector) Dot(v2 *Vector) float32 {
+	return (v1.x*v2.x + v1.y*v2.y + v1.z*v2.z)
+}
+
 // Intersect ...
 func (s *Sphere) Intersect(ray *Ray) bool {
-	return false
+	line := MakeVector(s.center, ray.origin)
+
+	adjacent := line.Dot(&ray.direction)
+	distance := float64(line.Dot(line) - adjacent*adjacent)
+	scope := s.radius * s.radius
+
+	return (distance < scope)
 }
 
 // CreatePoint ...
@@ -59,20 +66,20 @@ func CreateVector(x, y, z float32) *Vector {
 }
 
 // Normalize ...
-func (v *Vector) Normalize() *Vector {
-	length := float32(math.Sqrt(float64(v.x*v.x + v.y*v.y + v.z*v.z)))
+func (v1 *Vector) Normalize() *Vector {
+	length := float32(math.Sqrt(float64(v1.x*v1.x + v1.y*v1.y + v1.z*v1.z)))
 
 	if length > 0.0 {
-		v.x = v.x / length
-		v.y = v.y / length
-		v.z = v.z / length
+		v1.x = v1.x / length
+		v1.y = v1.y / length
+		v1.z = v1.z / length
 	}
 
-	return v
+	return v1
 }
 
 // CreateSphere ...
-func CreateSphere(center Point, radius float64, color Color) *Sphere {
+func CreateSphere(center Point, radius float64, color color.Color) *Sphere {
 	return &Sphere{
 		center: center,
 		radius: radius,
@@ -81,10 +88,6 @@ func CreateSphere(center Point, radius float64, color Color) *Sphere {
 }
 
 // CreateColor ...
-func CreateColor(red, green, blue float32) *Color {
-	return &Color{
-		red:   red,
-		green: green,
-		blue:  blue,
-	}
+func CreateColor(red, green, blue uint8) *color.RGBA {
+	return &color.RGBA{red, green, blue, 1}
 }

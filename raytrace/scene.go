@@ -2,7 +2,7 @@ package raytrace
 
 import (
 	"image"
-	"image/draw"
+	"image/color"
 	"math"
 )
 
@@ -25,9 +25,23 @@ func CreateNewScene(width, height int, fov float32, sphere Sphere) *Scene {
 }
 
 // Render ...
-func (s *Scene) Render() {
+func (s *Scene) Render() *image.RGBA {
 	m := image.NewRGBA(image.Rect(0, 0, s.width, s.height))
-	draw.Draw(m, m.Bounds(), image.Transparent, image.ZP, draw.Src)
+
+	for x := 0; x < s.width; x++ {
+		for y := 0; y < s.height; y++ {
+			ray := CreatePrime(x, y, s)
+
+			if s.sphere.Intersect(ray) {
+				m.Set(x, y, s.sphere.color)
+			} else {
+				m.Set(x, y, color.Black)
+			}
+		}
+	}
+
+	//draw.Draw(m, m.Bounds(), image.Transparent, image.ZP, draw.Src)
+	return m
 }
 
 // DegreeToRadius ...

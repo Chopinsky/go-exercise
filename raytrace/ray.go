@@ -7,7 +7,7 @@ type Ray struct {
 }
 
 // CreatePrime ...
-func CreatePrime(x, y uint32, scene *Scene) *Ray {
+func CreatePrime(x, y int, scene *Scene) *Ray {
 	fovAdjustment := DegreeToRadius(scene.fov) / 2.0
 	aspectRation := float32(scene.width / scene.height)
 
@@ -17,5 +17,14 @@ func CreatePrime(x, y uint32, scene *Scene) *Ray {
 	return &Ray{
 		origin:    *CreatePoint(0, 0, 0),
 		direction: *CreateVector(sensorX, sensorY, -1.0).Normalize(),
+	}
+}
+
+// MakeVector ...
+func MakeVector(target, origin Point) *Vector {
+	return &Vector{
+		x: target.x - origin.x,
+		y: target.y - origin.y,
+		z: target.z - origin.z,
 	}
 }
