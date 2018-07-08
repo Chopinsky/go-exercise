@@ -6,6 +6,20 @@ type Ray struct {
 	direction Vector
 }
 
+// Intersection ...
+type Intersection struct {
+	distance float64
+	object   Sphere
+}
+
+// NewIntersection ...
+func NewIntersection(distance float64, object Sphere) *Intersection {
+	return &Intersection{
+		distance,
+		object,
+	}
+}
+
 // CreatePrime ...
 func CreatePrime(x, y int, scene *Scene) *Ray {
 	fovAdjustment := DegreeToRadius(scene.fov) / 2.0
