@@ -20,7 +20,7 @@ type Sphere struct {
 
 // Plane ...
 type Plane struct {
-	p0     Point
+	origin Point
 	normal Vector
 	color  color.Color
 }
@@ -90,7 +90,16 @@ func CreateSphere(center Point, radius float64, color color.Color) *Sphere {
 
 // Intersect ...
 func (p *Plane) Intersect(ray *Ray) float64 {
-	// TODO ...
+	denom := p.normal.Dot(&ray.direction)
+	if denom > 1e-6 {
+		v := VectorFromPoints(&p.origin, &ray.origin)
+		distance := v.Dot(&p.normal) / denom
+
+		if distance >= 0.0 {
+			return float64(distance)
+		}
+	}
+
 	return -1.0
 }
 

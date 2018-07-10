@@ -9,11 +9,11 @@ type Ray struct {
 // Intersection ...
 type Intersection struct {
 	distance float64
-	object   Sphere
+	object   Element
 }
 
 // NewIntersection ...
-func NewIntersection(distance float64, object Sphere) *Intersection {
+func NewIntersection(distance float64, object Element) *Intersection {
 	return &Intersection{
 		distance,
 		object,
@@ -29,8 +29,12 @@ func CreatePrime(x, y int, scene *Scene) *Ray {
 	sensorY := (1.0 - (float32(y)+0.5)*2.0/float32(scene.height)) * fovAdjustment
 
 	return &Ray{
-		origin:    *CreatePoint(0, 0, 0),
-		direction: *CreateVector(sensorX, sensorY, -1.0).Normalize(),
+		origin: *CreatePoint(0, 0, 0),
+		direction: *VectorFromPoint(&Point{
+			x: sensorX,
+			y: sensorY,
+			z: -1.0,
+		}).Normalize(),
 	}
 }
 

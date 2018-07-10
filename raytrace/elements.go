@@ -2,6 +2,13 @@ package raytrace
 
 import "math"
 
+// ORIGIN ...
+var ORIGIN = &Point{
+	x: 0,
+	y: 0,
+	z: 0,
+}
+
 // Point ...
 type Point struct {
 	x float32
@@ -43,11 +50,16 @@ func CreatePoint(x, y, z float32) *Point {
 	}
 }
 
-// CreateVector ...
-func CreateVector(x, y, z float32) *Vector {
+// VectorFromPoints ...
+func VectorFromPoints(tgt, src *Point) *Vector {
 	return &Vector{
-		x: x,
-		y: y,
-		z: z,
+		x: tgt.x - src.x,
+		y: tgt.y - src.y,
+		z: tgt.z - src.z,
 	}
+}
+
+// VectorFromPoint ...
+func VectorFromPoint(p *Point) *Vector {
+	return VectorFromPoints(p, ORIGIN)
 }
