@@ -9,6 +9,7 @@ import (
 // Element ...
 type Element struct {
 	element Intersectable
+	albedo  float32
 }
 
 // Sphere ...
@@ -28,15 +29,16 @@ type Plane struct {
 // Intersectable ...
 type Intersectable interface {
 	Intersect(ray *Ray) float64
+	SurfaceNormal(hitPoint Point) *Vector
 }
 
 // Color ...
-func (e *Element) Color() (*color.Color, error) {
+func (e *Element) Color() (color.Color, error) {
 	switch el := e.element.(type) {
 	case *Sphere:
-		return &el.color, nil
+		return el.color, nil
 	case *Plane:
-		return &el.color, nil
+		return el.color, nil
 	default:
 		return nil, errors.New("Element type is not supported")
 	}
@@ -51,6 +53,18 @@ func (e *Element) Intersect(ray *Ray) (float64, error) {
 		return el.Intersect(ray), nil
 	default:
 		return -1, errors.New("Element type is not supported")
+	}
+}
+
+// SurfaceNormal ...
+func (e *Element) SurfaceNormal(hitPoint *Point) (*Vector, error) {
+	switch el := e.element.(type) {
+	case *Sphere:
+		return el.SurfaceNormal(*hitPoint), nil
+	case *Plane:
+		return el.SurfaceNormal(*hitPoint), nil
+	default:
+		return nil, errors.New("Element type is not supported")
 	}
 }
 
@@ -79,6 +93,12 @@ func (s *Sphere) Intersect(ray *Ray) float64 {
 	}
 }
 
+// SurfaceNormal ...
+func (s *Sphere) SurfaceNormal(hitPoint Point) *Vector {
+	vec := VectorFromPoints(&hitPoint, &s.center)
+	return vec.Normalize()
+}
+
 // CreateSphere ...
 func CreateSphere(center Point, radius float64, color color.Color) *Sphere {
 	return &Sphere{
@@ -101,6 +121,15 @@ func (p *Plane) Intersect(ray *Ray) float64 {
 	}
 
 	return -1.0
+}
+
+// SurfaceNormal ...
+func (p *Plane) SurfaceNormal(hitPoint Point) *Vector {
+	return &Vector{
+		x: -p.normal.x,
+		y: -p.normal.y,
+		z: -p.normal.z,
+	}
 }
 
 // CreateColor ...

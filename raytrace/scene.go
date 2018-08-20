@@ -55,7 +55,7 @@ func (s *Scene) Render() *image.RGBA {
 					continue
 				}
 
-				m.Set(x, y, *clr)
+				m.Set(x, y, clr)
 			}
 		}
 	}
@@ -86,6 +86,52 @@ func (s *Scene) Trace(ray *Ray) (*Intersection, error) {
 	}
 
 	return NewIntersection(min, el), nil
+}
+
+// GetColor ...
+func (s *Scene) GetColor(ray *Ray, intersect *Intersection) (color.Color, error) {
+	hitPoint := ray.origin.Add(ray.direction.Multiply(float32(intersect.distance)).ToPoint())
+
+	surfaceNormal, err := intersect.object.SurfaceNormal(hitPoint)
+	if err != nil {
+		return nil, errors.New("Unable to render scene: " + err.Error())
+	}
+
+	if _, err := s.Trace(ray); err != nil {
+		return color.Black, nil
+	}
+
+	lightDirection := s.light.direction.Multiply(-1).Normalize()
+	lightPower := surfaceNormal.Dot(lightDirection)
+
+	if lightPower <= 0.0 {
+		lightPower = 0.0
+		return color.Black, nil
+	}
+
+	lightPower = lightPower * s.light.intensity
+	lightReflected := intersect.object.albedo / math.Pi
+
+	if clr, err := intersect.object.Color(); err == nil {
+		pr, pg, pb, _ := clr.RGBA()
+		lr, lg, lb, _ := s.light.color.RGBA()
+		factor := lightPower * lightReflected
+
+		dr := factor * float32(pr-(pr-lr)/2.0)
+		dg := factor * float32(pg-(pg-lg)/2.0)
+		db := factor * float32(pb-(pb-lb)/2.0)
+
+		c := color.RGBA{
+			uint8(dr),
+			uint8(dg),
+			uint8(db),
+			1.0,
+		}
+
+		return c, nil
+	}
+
+	return nil, errors.New("Unable to render scene")
 }
 
 // DegreeToRadius ...
